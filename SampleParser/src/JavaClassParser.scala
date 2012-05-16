@@ -21,15 +21,9 @@ class JavaClassParser extends JavaTokenParsers {
  *  <name>:: = [a-zA-z_]\w*
  *  <vartype>:: = [a-zA-z_]\w*
  */
-  def cls:    Parser[ClassInfo] = access~"class"~name~"{"~rep(attr)~rep(method)~"}" ^^ {
-    case access~"class"~name~"{"~attr~method~"}" => clsFunc(access, name, attr, method)
-  }
-  def attr:   Parser[AttrInfo] = access~vartype~name~";" ^^ {
-    case access~vartype~name~";" => attrFunc(access, vartype, name)
-  }
-  def method: Parser[MethodInfo] = access~retval~name~"()"~"{}" ^^ {
-    case access~retval~name~"()"~"{}" => methodFunc(access, retval, name)
-  }
+  def cls:    Parser[Any] = access~"class"~name~"{"~rep(attr | method)~"}"
+  def attr:   Parser[Any] = access~vartype~name~";"
+  def method: Parser[Any] = access~retval~name~"()"~"{"~"}"
 
   def access: Parser[String] = ( "public" | "private" )
   def retval: Parser[String] = "void"
