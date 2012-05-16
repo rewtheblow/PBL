@@ -15,6 +15,8 @@
 <field modifier> ::= public | protected | private | static | final | transient | volatile
 <variable declarator> ::= <variable declarator id>
 <variable declarator id> ::= <identifier> | <variable declarator id> [ ]
+
+// start 5.17c‚èì‹Æ
 <method declaration> ::= <method header> <method body>
 <method header> ::= {<method modifier>} <result type> <method declarator>
 <result type> ::= <type> | void
@@ -30,6 +32,8 @@
 <constant modifiers> ::= public | static | final
 <abstract method declaration>::= {<abstract method modifier>} <result type> <method declarator> ;
 <abstract method modifier> ::= public | abstract
+// end
+
 <type> ::= <primitive type> | <reference type>
 <primitive type> ::= <numeric type> | boolean
 <numeric type> ::= <integral type> | <floating-point type>

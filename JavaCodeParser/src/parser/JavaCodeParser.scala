@@ -10,18 +10,40 @@ package parser
 import scala.util.parsing.combinator._
 
 class JavaCodeParser extends JavaTokenParsers  {
- /*
-  * Language Syntax
-  *
-  */
-  def Java: Parser[Any] = MyPackage~rep(Import)~Class
+  /*
+   * Javaコード全体の定義
+   * <Java>::= <MyPackage> {<Import>} ( <Class> | <Interface> )
+   */
+  def Java: Parser[Any] = MyPackage~rep(Import)~( Class | Interface )
+  /*
+   * パッケージ定義
+   * <MyPackage>::=package<PackageName>
+   * <PackageName>::= <Identifier> | <PackageName> . <Identifier>
+   */
   def MyPackage: Parser[Any] = "package"~PackageName~";"
-  def PackageName: Parser[Any] = ident | PackageName~"."~ident
+  def PackageName: Parser[Any] = Identifier | PackageName~"."~Identifier
+  /*
+   * Import文定義
+   * <Import>::= <SingleTypeImport> | <TypeImportOnDemand>
+   * <SingleTypeImport>::= import <TypeName>
+   * <TypeImportOnDemand>::= import <PackageName> .*
+   */
   def Import: Parser[Any] = SingleTypeImport | TypeImportOnDemand
   def SingleTypeImport: Parser[Any] = "import"~TypeName
-  def TypeName: Parser[Any] = PackageName
   def TypeImportOnDemand: Parser[Any] = "import"~PackageName~".*"
-  def Class: Parser[Any] = rep(ClassModifier)~"class"~ident~rep(MySuper)~rep(MyInterface)~ClassBody
+
+  /*
+   * クラス定義
+   * <Class>::= {<ClassModifier>} class <Identifier> {<MySuper>} {<MyInterface>} <ClassBody>
+   * <ClassModifier>::= public | abstract | final
+   * <MySuper>::= extends <ClassType>
+   * <ClassType> = <PackageName>
+   * <MyInterface>::= implements <InterfaceTypeList>
+   * <InterfaceTypeList>::= <PackageName>
+   * <ClassBody>::= { <ClassBodyDeclaration> }
+   * <ClassBodyDeclaration>::= <ClassMemberDeclaration> | <StaticInitializer>
+   */
+  def Class: Parser[Any] = rep(ClassModifier)~"class"~Identifier~rep(MySuper)~rep(MyInterface)~ClassBody
   def ClassModifier: Parser[Any] = "public" | "abstract" | "final"
   def MySuper: Parser[Any] = "extends"~ClassType
   def ClassType: Parser[Any] = PackageName
@@ -29,6 +51,61 @@ class JavaCodeParser extends JavaTokenParsers  {
   def InterfaceTypeList: Parser[Any] = PackageName
   def ClassBody: Parser[Any] = "{"~rep(ClassBodyDeclaration)~"}"
   def ClassBodyDeclaration: Parser[Any] = ClassMemberDeclaration | StaticInitializer
+  def StaticInitializer: Parser[Any] = "static"~MyBlock
+  def ClassMemberDeclaration: Parser[Any] = FieldDeclaration | MethodDeclaration
+
+  /*
+   * フィールド定義
+   * <FieldDeclaration> ::= {<FieldModifier>} <type> <VariableDeclarator> ;
+   * <FieldModifier> ::= public | protected | private | static | final | transient | volatile
+   * <VariableDeclarator> ::= <VariableDeclaratorId>
+   * <VariableDeclaratorId> ::= <Identifier> | <VariableDeclaratorId> [ ]
+   */
+  def FieldDeclaration: Parser[Any] = rep(FieldModifier)~MyType~VariableDeclarator
+  def FieldModifier: Parser[Any] = "public" | "protected" | "private" | "static" | "final" |
+                                   "transient" | "volatile"
+  def VariableDeclarator: Parser[Any] = VariableDeclaratorId
+  def VariableDeclaratorId: Parser[Any] = Identifier | VariableDeclaratorId~"["~"]"
+
+
+
+  /*
+   *　Tokens
+   *  <TypeName>::= <PackageName>
+   */
+  def TypeName: Parser[Any] = PackageName
+  /*
+   * Types
+   * <MyType> ::= <MyPrimitiveType> | <MyReferenceType>
+   * <MyPrimitiveType> ::= <MyNumericType> | boolean
+   * <MyNumericType> ::= <IntegralType> | <FloatingPointType>
+   * <IntegralType> ::= byte | short | int | long | char
+   * <FloatingPointType> ::= float | double
+   * <MyReferenceType> ::= <class or interface type> | <array type>
+   * <ClassOrInterfaceType> ::= <class type> | <interface type>
+   * <MyClassType> ::= <type name>
+   * <MyInterfaceType> ::= <type name>
+   */
+  def MyType: Parser[Any] = MyPrimitiveType | MyReferenceType
+  def MyPrimitiveType[Any]: Parser[Any] = MyNumericType | "boolean"
+  def MyNumericType[Any]: Parser[Any] = IntegralType | FloatingPointType
+  def IntegralType[Any]: Parser[String] = "byte" | "short" | "int" | "long" | "char"
+  def FloatingPointType: Parser[String] = "float" | "double"
+  def MyReferenceType: Parser[Any] = ClassOrInterfaceType | MyArrayType
+  def ClassOrInterfaceType: Parser[Any] = MyClassType | MyInterfaceType
+  def MyClassType: Parser[Any] = TypeName
+  def MyInterfaceType: Parser[Any] = TypeName
+  def MyArrayType: Parser[Any] = MyType~"["~"]"
+
+  /*
+   * メソッド本体、コメント部分
+   * <MyBlock>::= { <BlockStatements> }
+   * <BlockStatements>::= "" ToDo(12.5.17)：要実装
+   */
+  def Identifier: Parser[Any] = ident
+  def MyBlock: Parser[Any] = "{"~BlockStatements~"}"
+  def BlockStatements: Parser[Any] = ""
+
 
 
 }
