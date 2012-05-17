@@ -2,7 +2,7 @@ package parser
 
 /**
  * Created with IntelliJ IDEA.
- * User: heya
+ * User: H.S
  * Date: 12/05/15
  * Time: 0:16
  * To change this template use File | Settings | File Templates.
