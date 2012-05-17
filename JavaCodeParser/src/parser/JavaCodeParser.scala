@@ -2,7 +2,7 @@ package parser
 
 /**
  * Created with IntelliJ IDEA.
- * User: H.S
+ * User: S.H
  * Date: 12/05/15
  * Time: 0:16
  * To change this template use File | Settings | File Templates.
@@ -31,6 +31,31 @@ class JavaCodeParser extends JavaTokenParsers  {
   def Import: Parser[Any] = SingleTypeImport | TypeImportOnDemand
   def SingleTypeImport: Parser[Any] = "import"~TypeName
   def TypeImportOnDemand: Parser[Any] = "import"~PackageName~".*"
+
+  /*
+   * インターフェース定義
+   *  <Interface> ::= {<InterfaceModifier>} interface <Identifier> <ExtendsInterfaces>? <InterfaceBody>
+   *  <InterfaceModifier> ::= public | abstract
+   *  <ExtendsInterfaces> ::= extends <InterfaceType> | <ExtendsInterfaces> , <InterfaceType>
+   *  <InterfaceType> ::= <TypeName>
+   *  <InterfaceBody> ::= "{" {<InterfaceMemberDeclaration>} "}"
+   *  <InterfaceMemberDeclaration> ::= <ConstantDeclaration> | <AbstractMethodDeclaration>
+   *  <ConstantDeclaration> ::= <constant modifiers> <type> <variable declarator>
+   *  <ConstantModifiers> ::= public | static | final
+   *  <AbstractMethodDeclaration>::= {<abstract method modifier>} <result type> <method declarator> ;
+   *  <AbstractMethodModifier> ::= public | abstract
+   */
+  def Interface: Parser[Any] = rep(InterfaceModifier)~"interface"~Identifier~rep(ExtendsInterfaces)~InterfaceBody
+  def InterfaceModifier: Parser[Any] = "public" | "abstract"
+  def ExtendsInterfaces: Parser[Any] = "extends"~InterfaceType | ExtendsInterfaces~","~InterfaceType
+  def InterfaceType: Parser[Any] = TypeName
+  def InterfaceBody: Parser[Any] = "{"~rep(InterfaceMemberDeclaration)~"}"
+  def InterfaceMemberDeclaration: Parser[Any] = ConstantDeclaration | AbstractMethodDeclaration
+  def ConstantDeclaration: Parser[Any] = ConstantModifiers~MyType~VariableDeclarator
+  def ConstantModifiers: Parser[Any] = "public" | "static" | "final"
+  def AbstractMethodDeclaration: Parser[Any] = rep(AbstractMethodModifier)~ResultType~MethodDeclarator
+  def AbstractMethodModifier; Parser[Any] = "public" | "abstract"
+
 
   /*
    * クラス定義
@@ -67,7 +92,26 @@ class JavaCodeParser extends JavaTokenParsers  {
   def VariableDeclarator: Parser[Any] = VariableDeclaratorId
   def VariableDeclaratorId: Parser[Any] = Identifier | VariableDeclaratorId~"["~"]"
 
-
+ /*
+  *　メソッド定義
+  * <MethodDeclaration> ::= <MethodHeader> <MethodBody>
+  * <MethodHeader> ::= {<MethodModifier>} <ResultType> <MethodDeclarator>
+  * <ResultType> ::= <MyType> | void
+  * <MethodModifier> ::= public | protected | private | static | abstract | final | synchronized | native
+  * <MethodDeclarator> ::= <Identifier> ( <FormalParameterList>? )
+  * <FormalParameterList> ::= <FormalParameter> | <FormalParameterList> , <FormalParameter>
+  * <FormalParameter> ::= <MyType> <VariableDeclaratorId>
+  * <method body> ::= <MyBlock> | ;
+  */
+  def MethodDeclaration: Parser[Any] = MethodHeader~MethodBody
+  def MethodHeader: Parser[Any] = rep(MethodModifier)~ResultType~MethodDeclarator
+  def ResultType: Parser[Any] = MyType | "void"
+  def MethodModifier: Parser[Any] = "public" | "protected" | "private" | "abstract" | "final"
+                                    "synchronized" | "native"
+  def MethodDeclarator: Parser[Any] = Identifier~"("~FormalParameterList~")"
+  def FormalParameterList: Parser[Any] = FormalParameter | FormalParameterList~","~FormalParameter
+  def FormalParameter: Parser[Any] = MyType~VariableDeclaratorId
+  def MethodBody: Parser[Any] = MyBlock | ";"
 
   /*
    *　Tokens
