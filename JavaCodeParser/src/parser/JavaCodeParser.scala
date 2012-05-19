@@ -21,7 +21,8 @@ class JavaCodeParser extends JavaTokenParsers  {
    * <PackageName>::= <Identifier> | <PackageName> . <Identifier>
    */
   def MyPackage: Parser[Any] = "package"~PackageName~";"
-  def PackageName: Parser[Any] = Identifier | PackageName~"."~Identifier
+//  def PackageName: Parser[Any] = Identifier | PackageName~"."~Identifier
+  def PackageName: Parser[Any] = repsep(Identifier, ".")
   /*
    * Import文定義
    * <Import>::= <SingleTypeImport> | <TypeImportOnDemand>
@@ -54,7 +55,7 @@ class JavaCodeParser extends JavaTokenParsers  {
   def ConstantDeclaration: Parser[Any] = ConstantModifiers~MyType~VariableDeclarator
   def ConstantModifiers: Parser[Any] = "public" | "static" | "final"
   def AbstractMethodDeclaration: Parser[Any] = rep(AbstractMethodModifier)~ResultType~MethodDeclarator
-  def AbstractMethodModifier; Parser[Any] = "public" | "abstract"
+  def AbstractMethodModifier: Parser[Any] = "public" | "abstract"
 
 
   /*
@@ -86,11 +87,12 @@ class JavaCodeParser extends JavaTokenParsers  {
    * <VariableDeclarator> ::= <VariableDeclaratorId>
    * <VariableDeclaratorId> ::= <Identifier> | <VariableDeclaratorId> [ ]
    */
-  def FieldDeclaration: Parser[Any] = rep(FieldModifier)~MyType~VariableDeclarator
+  def FieldDeclaration: Parser[Any] = rep(FieldModifier)~MyType~VariableDeclarator~";"
   def FieldModifier: Parser[Any] = "public" | "protected" | "private" | "static" | "final" |
                                    "transient" | "volatile"
   def VariableDeclarator: Parser[Any] = VariableDeclaratorId
-  def VariableDeclaratorId: Parser[Any] = Identifier | VariableDeclaratorId~"["~"]"
+//  def VariableDeclaratorId: Parser[Any] = Identifier | VariableDeclaratorId~"["~"]"
+  def VariableDeclaratorId: Parser[Any] = Identifier | Identifier~"["~"]"
 
  /*
   *　メソッド定義
@@ -109,7 +111,8 @@ class JavaCodeParser extends JavaTokenParsers  {
   def MethodModifier: Parser[Any] = "public" | "protected" | "private" | "abstract" | "final"
                                     "synchronized" | "native"
   def MethodDeclarator: Parser[Any] = Identifier~"("~FormalParameterList~")"
-  def FormalParameterList: Parser[Any] = FormalParameter | FormalParameterList~","~FormalParameter
+//  def FormalParameterList: Parser[Any] = FormalParameter | FormalParameterList~","~FormalParameter
+  def FormalParameterList: Parser[Any] = repsep(FormalParameter, ".")
   def FormalParameter: Parser[Any] = MyType~VariableDeclaratorId
   def MethodBody: Parser[Any] = MyBlock | ";"
 
@@ -131,9 +134,9 @@ class JavaCodeParser extends JavaTokenParsers  {
    * <MyInterfaceType> ::= <type name>
    */
   def MyType: Parser[Any] = MyPrimitiveType | MyReferenceType
-  def MyPrimitiveType[Any]: Parser[Any] = MyNumericType | "boolean"
-  def MyNumericType[Any]: Parser[Any] = IntegralType | FloatingPointType
-  def IntegralType[Any]: Parser[String] = "byte" | "short" | "int" | "long" | "char"
+  def MyPrimitiveType: Parser[Any] = MyNumericType | "boolean"
+  def MyNumericType: Parser[Any] = IntegralType | FloatingPointType
+  def IntegralType: Parser[String] = "byte" | "short" | "int" | "long" | "char"
   def FloatingPointType: Parser[String] = "float" | "double"
   def MyReferenceType: Parser[Any] = ClassOrInterfaceType | MyArrayType
   def ClassOrInterfaceType: Parser[Any] = MyClassType | MyInterfaceType
@@ -146,7 +149,7 @@ class JavaCodeParser extends JavaTokenParsers  {
    * <MyBlock>::= { <BlockStatements> }
    * <BlockStatements>::= "" ToDo(12.5.17)：要実装
    */
-  def Identifier: Parser[Any] = ident
+  def Identifier: Parser[String] = ident
   def MyBlock: Parser[Any] = "{"~BlockStatements~"}"
   def BlockStatements: Parser[Any] = ""
 
